@@ -1,0 +1,42 @@
+services:
+  web:
+    build:
+     context: app
+     target: builder
+    ports:
+      - '5000:5000'
+    restart: always
+    volumes:
+        - webodm_appmedia:/var/lib/docker/volumes/webodm_appmedia/_data
+        - cvat_data:/app
+    depends_on:
+        - rabbit
+    
+  rabbit:
+    hostname: rabbit
+    image: "rabbitmq:3-management"
+    environment:
+        - RABBITMQ_DEFAULT_USER=admin
+        - RABBITMQ_DEFAULT_PASS=mypass
+    ports:
+        - "15672:15672"
+        - "5672:5672"
+
+  simple_worker:
+    build: './simple_worker'
+    user: root
+    volumes:
+        - worker:/simple_worker
+        - cvat_data:/app
+        - webodm_appmedia:/var/lib/docker/volumes/webodm_appmedia/_data
+    depends_on:
+        - rabbit
+        - web
+    
+volumes:
+    webodm_appmedia:
+        external: true
+    cvat_data:
+        external: false
+    worker:
+        external: false
