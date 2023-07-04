@@ -1,5 +1,6 @@
 from typing import Any
-
+import requests
+import json
 from cvat_sdk import make_client, models
 from cvat_sdk.core.proxies.tasks import ResourceType, Task
 from cvat_sdk.api_client import Configuration, ApiClient, exceptions
@@ -23,7 +24,42 @@ def longtime_add(x, y):
     logger.info('Work Finished ')
     return x + y
 
-with make_client(host="http://host.docker.internal:8080", credentials=('andrewalmasi@gmail.com','Hunt77584')) as client:
+@app.task
+def annotateFile(filename, tag):
+    firstPath = os.path.join(os.getcwd(), tag)
+    isExist = os.path.exists(firstPath)
+    logger.info(isExist)
+    logger.info(firstPath)
+    with open(firstPath + r'/indexing.txt', 'r') as f:
+        for index, line in enumerate(f):
+            if filename in line:
+                doesExist = True
+                taskid = int(line.split(" ")[1])
+                break
+    payload = json.dumps({"username": "andrewalmasi@gmail.com","email": "andrewalmasi@gmail.com","password": "Arshia77584$"})
+    headers= {'accept': 'application/vnd.cvat+json','Content-Type':'application/json'}
+    r = requests.request("POST", 'http://host.docker.internal:8080/api/auth/login', headers=headers, data=payload)
+    logger.info("Done signing in")
+    headers = {'accept': 'application/vnd.cvat+json',}
+    jobidresult = requests.get('http://host.docker.internal:8080/api/tasks/{}'.format(taskid), headers=headers, cookies=r.cookies).json()
+    jobid = jobidresult["data"]
+    logger.info("Done getting jobid")
+
+    headers = {'accept': 'application/vnd.cvat+json','Content-Type': 'application/json','X-CSRFTOKEN': r.cookies['csrftoken'],}
+    json_data = {
+        'function': 'openvino-omz-public-yolo-v3-tf',
+        'task': taskid,
+        'job': jobid,
+        'quality': 'original',
+        'cleanup': False,
+        'convMaskToPoly': False,
+        'threshold': 0,
+        'max_distance': 0,
+    }
+    response = requests.post('http://host.docker.internal:8080/api/lambda/requests', cookies=r.cookies, headers=headers, json=json_data)
+    return "Successful"
+
+with make_client(host="http://host.docker.internal:8080", credentials=('andrewalmasi@gmail.com','Arshia77584$')) as client:
     @app.task
     def saveAtDirectory(filename,tag):
         firstPath = os.path.join(os.getcwd(), tag)

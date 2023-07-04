@@ -17,6 +17,13 @@ app = Flask(__name__)
 simple_app = Celery('simple_worker', broker='amqp://admin:mypass@rabbit:5672', backend='rpc://')
 
 # var/lib/docker/volumes/f6ea3fb681c4a714de3e17cd23ee282e4be51a8f923fe8888c034ff94df4fcf1/_data
+@app.route('/annotate/<tag>/<filename>/', methods=['POST','GET'])
+def ello(tag, filename):
+    app.logger.info("Annotating")
+    z = simple_app.send_task('tasks.annotateFile', kwargs={'filename': f'{filename}', 'tag': f'{tag}'})
+    app.logger.info(z.backend)
+    return redirect("http://localhost:8080/", code=302)
+
 @app.route('/cvat_task/<tag>/<filename>/', methods=['POST','GET'])
 def hi(tag, filename):
     app.logger.info("Saving File")
