@@ -5,6 +5,8 @@ services:
      target: builder
     ports:
       - '5000:5000'
+    networks:
+      - cvat
     restart: always
     volumes:
         - webodm_appmedia:/var/lib/docker/volumes/webodm_appmedia/_data
@@ -15,6 +17,8 @@ services:
   rabbit:
     hostname: rabbit
     image: "rabbitmq:3-management"
+    networks:
+      - cvat
     environment:
         - RABBITMQ_DEFAULT_USER=admin
         - RABBITMQ_DEFAULT_PASS=mypass
@@ -25,6 +29,8 @@ services:
   simple_worker:
     build: './simple_worker'
     user: root
+    networks:
+      - cvat
     volumes:
         - worker:/simple_worker
         - cvat_data:/app
@@ -40,3 +46,8 @@ volumes:
         external: false
     worker:
         external: false
+
+networks:
+  cvat:
+    name: cvat_cvat
+    external: true

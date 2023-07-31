@@ -10,20 +10,26 @@ from util import make_pbar
 import time
 from celery import Celery
 from celery.utils.log import get_task_logger
+from dotenv import load_dotenv
 
 logger = get_task_logger(__name__)
 
 app = Celery('tasks',
              broker='amqp://admin:mypass@rabbit:5672',
              backend='rpc://')
+load_dotenv()
 x=os.environ.get('username')
 y=os.environ.get('password')
+if x is None:
+    x = "andrewalmasi@gmail.com"
+if y is None:
+    y = "Hunt77584$"
+
 @app.task()
-def longtime_add(x, y):
-    logger.info('Got Request - Starting work ')
-    time.sleep(4)
-    logger.info('Work Finished ')
-    return x + y
+def longtime_add():
+    logger.info('Work Finished')
+    logger.info(x)
+    return x
 
 @app.task
 def annotateFile(filename, tag):
@@ -39,10 +45,10 @@ def annotateFile(filename, tag):
                 break
     payload = json.dumps({"username": x,"email": x,"password": y})
     headers= {'accept': 'application/vnd.cvat+json','Content-Type':'application/json'}
-    r = requests.request("POST", 'http://host.docker.internal:8080/api/auth/login', headers=headers, data=payload)
+    r = requests.request("POST", 'http://cvat-server:8080/api/auth/login', headers=headers, data=payload)
     logger.info("Done signing in")
     headers = {'accept': 'application/vnd.cvat+json',}
-    jobidresult = requests.get('http://host.docker.internal:8080/api/tasks/{}'.format(taskid), headers=headers, cookies=r.cookies).json()
+    jobidresult = requests.get('http://cvat-server:8080/api/tasks/{}'.format(taskid), headers=headers, cookies=r.cookies).json()
     jobid = jobidresult["data"]
     logger.info("Done getting jobid")
 
@@ -57,10 +63,10 @@ def annotateFile(filename, tag):
         'threshold': 0,
         'max_distance': 0,
     }
-    response = requests.post('http://host.docker.internal:8080/api/lambda/requests', cookies=r.cookies, headers=headers, json=json_data)
+    response = requests.post('http://cvat-server:8080/api/lambda/requests', cookies=r.cookies, headers=headers, json=json_data)
     return "Successful"
 
-with make_client(host="http://host.docker.internal:8080", credentials=(x,y)) as client:
+with make_client(host="http://cvat-server:8080", credentials=(x,y)) as client:
     @app.task
     def saveAtDirectory(filename,tag):
         firstPath = os.path.join(os.getcwd(), tag)

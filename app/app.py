@@ -45,26 +45,16 @@ def createProjectInCvat(tag):
 def createTask(tag,filename,taskid):
     e = simple_app.send_task('tasks.taskCreationWithProject', kwargs={'filename': f'{filename}', 'tag': f'{tag}', 'taskid': f'{taskid}'})
     app.logger.info(e.backend)
+    #z = simple_app.send_task('tasks.annotateFile', kwargs={'filename': f'{filename}', 'tag': f'{tag}'})
     #tasks.writeToFile(firstPath, task.id, filename)
     return redirect("http://localhost:8080/projects/", code=302)
 
 @app.route('/simple_start_task')
 def call_method():
     app.logger.info("Invoking Method ")
-    r = simple_app.send_task('tasks.longtime_add', kwargs={'x': 1, 'y': 2})
+    r = simple_app.send_task('tasks.longtime_add')
     app.logger.info(r.backend)
     return r.id
-
-@app.route('/simple_task_status/<task_id>')
-def get_status(task_id):
-    status = simple_app.AsyncResult(task_id, app = simple_app)
-    print("Invoking Method ")
-    return "Status of the Task " + str(status.state)
-
-@app.route('/simple_task_result/<task_id>')
-def task_result(task_id):
-    result = simple_app.AsyncResult(task_id).result
-    return "Result of the Task " + str(result)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
