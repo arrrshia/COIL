@@ -16,7 +16,8 @@ logger = get_task_logger(__name__)
 app = Celery('tasks',
              broker='amqp://admin:mypass@rabbit:5672',
              backend='rpc://')
-
+x=os.environ.get('username')
+y=os.environ.get('password')
 @app.task()
 def longtime_add(x, y):
     logger.info('Got Request - Starting work ')
@@ -36,7 +37,7 @@ def annotateFile(filename, tag):
                 doesExist = True
                 taskid = int(line.split(" ")[1])
                 break
-    payload = json.dumps({"username": "andrewalmasi@gmail.com","email": "andrewalmasi@gmail.com","password": "Arshia77584$"})
+    payload = json.dumps({"username": x,"email": x,"password": y})
     headers= {'accept': 'application/vnd.cvat+json','Content-Type':'application/json'}
     r = requests.request("POST", 'http://host.docker.internal:8080/api/auth/login', headers=headers, data=payload)
     logger.info("Done signing in")
@@ -59,7 +60,7 @@ def annotateFile(filename, tag):
     response = requests.post('http://host.docker.internal:8080/api/lambda/requests', cookies=r.cookies, headers=headers, json=json_data)
     return "Successful"
 
-with make_client(host="http://host.docker.internal:8080", credentials=('andrewalmasi@gmail.com','Arshia77584$')) as client:
+with make_client(host="http://host.docker.internal:8080", credentials=(x,y)) as client:
     @app.task
     def saveAtDirectory(filename,tag):
         firstPath = os.path.join(os.getcwd(), tag)
