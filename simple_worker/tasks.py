@@ -21,9 +21,9 @@ load_dotenv()
 x=os.environ.get('username')
 y=os.environ.get('password')
 if x is None:
-    x = "andrewalmasi@gmail.com"
+    x = ""
 if y is None:
-    y = "Hunt77584$"
+    y = ""
 
 @app.task()
 def longtime_add():
